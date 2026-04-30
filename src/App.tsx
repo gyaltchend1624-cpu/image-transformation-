@@ -81,13 +81,27 @@ export default function App() {
       setStatus('result');
     } catch (err: any) {
       console.error(err);
-      const errorMessage = err?.message || 'The Bizarre energy was too strong!';
-      if (errorMessage.includes('API_KEY')) {
+      let errorMessage = err?.message || 'The Bizarre energy was too strong!';
+      
+      // Handle the specific JSON error string from Gemini SDK if it happens
+      if (errorMessage.includes('RESOURCE_EXHAUSTED')) {
+        setError('Stand Power Overloaded! (Daily/Minute Quota Reached). Please wait a minute before another transformation.');
+      } else if (errorMessage.includes('API_KEY')) {
         setError('GEMINI_API_KEY is missing. Please set it in your Netlify environment variables.');
       } else if (errorMessage.includes('safety')) {
         setError('The image was flagged by safety filters. Try a different photo!');
       } else {
-        setError(`Error: ${errorMessage}. Please try again.`);
+        // Try to parse JSON if it's a raw stringified error from the SDK
+        try {
+          const parsed = JSON.parse(errorMessage);
+          if (parsed.error?.code === 429) {
+             setError('Bizarre Energy Depleted. Please wait a moment while your Stand recharges (Quota Exceeded).');
+          } else {
+             setError(`Error: ${parsed.error?.message || 'Unknown energy disturbance'}`);
+          }
+        } catch {
+          setError(`Error: ${errorMessage.slice(0, 100)}... Please try again.`);
+        }
       }
       setStatus('upload');
     }
