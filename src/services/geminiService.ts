@@ -1,6 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+function getAI() {
+  if (!aiInstance) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "") {
+      throw new Error("GEMINI_API_KEY is missing. Please set it in your Netlify environment variables.");
+    }
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+}
 
 export interface TransformResult {
   prompt: string;
@@ -28,11 +39,12 @@ Translate to "Bizarre" Visuals:
 - Style: Thick bold linework, cinematic lighting, and surreal JoJo colors (e.g. purple/cyan background).
 - Text: Include floating red manga text "ゴゴゴゴ" (MENACING).
 
-Output ONLY the prompt. No conversation.
+Output ONLY the prompt in English. No conversation.
 `;
 
 export async function generateJoJoPrompt(imageBase64: string, mimeType: string): Promise<string> {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash",
       contents: {
@@ -50,7 +62,7 @@ export async function generateJoJoPrompt(imageBase64: string, mimeType: string):
       }
     });
 
-    return response.text.trim();
+    return response.text || "";
   } catch (error) {
     console.error("Error generating prompt:", error);
     throw error;
@@ -59,7 +71,7 @@ export async function generateJoJoPrompt(imageBase64: string, mimeType: string):
 
 export async function generateJoJoImage(prompt: string): Promise<string> {
   try {
-    // Using gemini-2.5-flash-image for image generation
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
@@ -77,11 +89,13 @@ export async function generateJoJoImage(prompt: string): Promise<string> {
     });
 
     let imageUrl = "";
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        const base64EncodeString: string = part.inlineData.data;
-        imageUrl = `data:image/png;base64,${base64EncodeString}`;
-        break;
+    if (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          const base64EncodeString: string = part.inlineData.data;
+          imageUrl = `data:image/png;base64,${base64EncodeString}`;
+          break;
+        }
       }
     }
 

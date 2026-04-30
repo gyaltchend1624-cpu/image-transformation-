@@ -12,8 +12,15 @@
   --color-brand-bg: #0A0A0A;
 }
 
+@utility vertical-rl {
+  writing-mode: vertical-rl;
+}
+
 @layer base {
   body {
-    @apply bg-brand-bg text-white;
+    @apply bg-brand-bg text-white h-full;
+  }
+  html {
+    @apply h-full;
   }
 }
