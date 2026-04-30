@@ -1,0 +1,11 @@
+{
+  "name": "Bizarre Anime Transformer",
+  "description": "Transform your photos into high-fashion, hyper-dramatic JoJo's Bizarre Adventure style anime art using AI.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "AI Image Analysis",
+    "AI Image Generation"
+  ]
+}
