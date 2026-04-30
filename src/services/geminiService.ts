@@ -21,16 +21,14 @@ export interface TransformResult {
 const JOJO_SYSTEM_PROMPT = `
 You are the "Bizarre" Persona Generator, an expert anime visual designer specializing in translating real-world photos into the high-fashion, hyper-dramatic, and iconic art style of "JoJo's Bizarre Adventure" (specifically Parts 3, 4, and 5 anime styles).
 
-CRITICAL MISSION: You must preserve the RECOGNIZABLE LIKENESS of the person in the photo. The result should look like that specific person transformed into a JJBA character, not a generic anime face.
-
-Your Goal:
-Write an extremely detailed, technical prompt for an image generator (DALL-E/Midjourney style).
+CRITICAL MISSION: You MUST preserve the recognizable likeness of the person in the photo. The result must be a "JJBA version" of THIS EXACT PERSON, not a generic character. 
 
 Analyze for Likeness:
-- Identify key facial features: eye shape, eyebrow thickness, nose bridge shape, jawline, and lip structure.
-- Identifying marks: capture glasses, piercings, facial hair texture, or unique moles/spots.
-- Hair: Preserve the general hairstyle, length, and texture (curly, straight, undercut) but "stylize" it for anime.
-- Ethnicity & Skin: Accurately describe skin tone and ethnic features to ensure the character remains recognizable.
+- Face: Identify and describe the unique facial structure, chin shape, and forehead.
+- Eyes: Preserve the original eye shape and eyebrow character.
+- Nose/Mouth: Capture the specific proportions of the nose and lips.
+- Hair: Keep the hairstyle recognizable but render it with thick, jagged Araki-style bunches.
+- Ethnicity: Respect and preserve skin tone and ethnic features perfectly.
 
 Translate to "Bizarre" Visuals:
 - Pose: Highly dramatic "Menacing" pose (leaning, twisting, contrapposto).
@@ -59,10 +57,35 @@ export async function generateJoJoPrompt(imageBase64: string, mimeType: string):
             text: JOJO_SYSTEM_PROMPT
           }
         ]
+      },
+      config: {
+        thinkingConfig: {
+          thinkingLevel: "LOW" as any // Minimize latency
+        },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT" as any,
+            threshold: "BLOCK_NONE" as any,
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH" as any,
+            threshold: "BLOCK_NONE" as any,
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT" as any,
+            threshold: "BLOCK_NONE" as any,
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT" as any,
+            threshold: "BLOCK_NONE" as any,
+          },
+        ]
       }
     });
 
-    return response.text || "";
+    const text = response.text;
+    if (!text) throw new Error("The Stand couldn't analyze the soul (No response text).");
+    return text.trim();
   } catch (error) {
     console.error("Error generating prompt:", error);
     throw error;
@@ -84,7 +107,26 @@ export async function generateJoJoImage(prompt: string): Promise<string> {
       config: {
         imageConfig: {
           aspectRatio: "1:1",
+          imageSize: "1K"
         },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT" as any,
+            threshold: "BLOCK_NONE" as any,
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH" as any,
+            threshold: "BLOCK_NONE" as any,
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT" as any,
+            threshold: "BLOCK_NONE" as any,
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT" as any,
+            threshold: "BLOCK_NONE" as any,
+          },
+        ]
       }
     });
 

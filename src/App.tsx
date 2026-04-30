@@ -79,9 +79,16 @@ export default function App() {
       setResultImage(generatedImageUrl);
       
       setStatus('result');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError('The Bizarre energy was too strong! Please try again.');
+      const errorMessage = err?.message || 'The Bizarre energy was too strong!';
+      if (errorMessage.includes('API_KEY')) {
+        setError('GEMINI_API_KEY is missing. Please set it in your Netlify environment variables.');
+      } else if (errorMessage.includes('safety')) {
+        setError('The image was flagged by safety filters. Try a different photo!');
+      } else {
+        setError(`Error: ${errorMessage}. Please try again.`);
+      }
       setStatus('upload');
     }
   };
